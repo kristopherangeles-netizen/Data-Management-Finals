@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Restaurant Management Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div>
+          <h1>Restaurant Management Dashboard</h1>
+          <p>Manage customers, reservations, menu items, and orders from one page.</p>
+        </div>
+        <div class="badge">Database: {{ db_type }}</div>
+      </header>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-list">
+            {% for category, message in messages %}
+              <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <section class="grid">
+        <div class="card">
+          <h2>Customers</h2>
+          <form method="post" action="{{ url_for('save_customer') }}">
+            <input type="hidden" name="customer_id" value="{{ edit_customer.customer_id if edit_customer else '' }}" />
+            <label>First Name
+              <input name="first_name" value="{{ edit_customer.first_name if edit_customer else '' }}" required />
+            </label>
+            <label>Last Name
+              <input name="last_name" value="{{ edit_customer.last_name if edit_customer else '' }}" required />
+            </label>
+            <label>Email
+              <input type="email" name="email" value="{{ edit_customer.email if edit_customer else '' }}" required />
+            </label>
+            <label>Phone
+              <input name="phone" value="{{ edit_customer.phone if edit_customer else '' }}" />
+            </label>
+            <label>Loyalty Points
+              <input type="number" name="loyalty_points" value="{{ edit_customer.loyalty_points if edit_customer else 0 }}" />
+            </label>
+            <button type="submit">{{ 'Update Customer' if edit_customer else 'Add Customer' }}</button>
+          </form>
+          <table>
+            <thead>
+              <tr><th>Name</th><th>Email</th><th>Points</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              {% for customer in customers %}
+              <tr>
+                <td>{{ customer.first_name }} {{ customer.last_name }}</td>
+                <td>{{ customer.email }}</td>
+                <td>{{ customer.loyalty_points }}</td>
+                <td>
+                  <a href="{{ url_for('index', edit_customer_id=customer.customer_id) }}">Edit</a>
+                  <form method="post" action="{{ url_for('delete_customer', customer_id=customer.customer_id) }}" style="display:inline;">
+                    <button class="danger" type="submit">Delete</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h2>Reservations</h2>
+          <form method="post" action="{{ url_for('save_reservation') }}">
+            <input type="hidden" name="reservation_id" value="{{ edit_reservation.reservation_id if edit_reservation else '' }}" />
+            <label>Customer
+              <select name="customer_id" required>
+                <option value="">Select customer</option>
+                {% for customer in customers %}
+                <option value="{{ customer.customer_id }}" {% if edit_reservation and edit_reservation.customer_id == customer.customer_id %}selected{% endif %}>{{ customer.first_name }} {{ customer.last_name }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label>Date
+              <input type="date" name="reservation_date" value="{{ edit_reservation.reservation_date if edit_reservation else '' }}" required />
+            </label>
+            <label>Time
+              <input type="time" name="reservation_time" value="{{ edit_reservation.reservation_time if edit_reservation else '' }}" required />
+            </label>
+            <label>Party Size
+              <input type="number" name="party_size" value="{{ edit_reservation.party_size if edit_reservation else 2 }}" required />
+            </label>
+            <label>Status
+              <select name="status">
+                <option value="confirmed" {% if edit_reservation and edit_reservation.status == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                <option value="checked_in" {% if edit_reservation and edit_reservation.status == 'checked_in' %}selected{% endif %}>Checked In</option>
+                <option value="completed" {% if edit_reservation and edit_reservation.status == 'completed' %}selected{% endif %}>Completed</option>
+                <option value="cancelled" {% if edit_reservation and edit_reservation.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+              </select>
+            </label>
+            <label>Notes
+              <input name="notes" value="{{ edit_reservation.notes if edit_reservation else '' }}" />
+            </label>
+            <button type="submit">{{ 'Update Reservation' if edit_reservation else 'Add Reservation' }}</button>
+          </form>
+          <table>
+            <thead>
+              <tr><th>Customer</th><th>Date</th><th>Time</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              {% for reservation in reservations %}
+              <tr>
+                <td>{{ reservation.customer_name }}</td>
+                <td>{{ reservation.reservation_date }}</td>
+                <td>{{ reservation.reservation_time }}</td>
+                <td>{{ reservation.status }}</td>
+                <td>
+                  <a href="{{ url_for('index', edit_reservation_id=reservation.reservation_id) }}">Edit</a>
+                  <form method="post" action="{{ url_for('delete_reservation', reservation_id=reservation.reservation_id) }}" style="display:inline;">
+                    <button class="danger" type="submit">Delete</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h2>Menu Items</h2>
+          <form method="post" action="{{ url_for('save_menu_item') }}">
+            <input type="hidden" name="menu_item_id" value="{{ edit_menu_item.menu_item_id if edit_menu_item else '' }}" />
+            <label>Name
+              <input name="name" value="{{ edit_menu_item.name if edit_menu_item else '' }}" required />
+            </label>
+            <label>Category
+              <input name="category" value="{{ edit_menu_item.category if edit_menu_item else '' }}" required />
+            </label>
+            <label>Price
+              <input type="number" step="0.01" name="price" value="{{ edit_menu_item.price if edit_menu_item else 0 }}" required />
+            </label>
+            <label>Description
+              <input name="description" value="{{ edit_menu_item.description if edit_menu_item else '' }}" />
+            </label>
+            <label>Available
+              <select name="is_available">
+                <option value="1" {% if edit_menu_item and edit_menu_item.is_available == 1 %}selected{% endif %}>Yes</option>
+                <option value="0" {% if edit_menu_item and edit_menu_item.is_available == 0 %}selected{% endif %}>No</option>
+              </select>
+            </label>
+            <button type="submit">{{ 'Update Menu Item' if edit_menu_item else 'Add Menu Item' }}</button>
+          </form>
+          <table>
+            <thead>
+              <tr><th>Name</th><th>Category</th><th>Price</th><th>Available</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              {% for item in menu_items %}
+              <tr>
+                <td>{{ item.name }}</td>
+                <td>{{ item.category }}</td>
+                <td>${{ '%.2f'|format(item.price) }}</td>
+                <td>{{ 'Yes' if item.is_available else 'No' }}</td>
+                <td>
+                  <a href="{{ url_for('index', edit_menu_item_id=item.menu_item_id) }}">Edit</a>
+                  <form method="post" action="{{ url_for('delete_menu_item', menu_item_id=item.menu_item_id) }}" style="display:inline;">
+                    <button class="danger" type="submit">Delete</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h2>Orders</h2>
+          <form method="post" action="{{ url_for('save_order') }}">
+            <input type="hidden" name="order_id" value="{{ edit_order.order_id if edit_order else '' }}" />
+            <label>Customer
+              <select name="customer_id" required>
+                <option value="">Select customer</option>
+                {% for customer in customers %}
+                <option value="{{ customer.customer_id }}" {% if edit_order and edit_order.customer_id == customer.customer_id %}selected{% endif %}>{{ customer.first_name }} {{ customer.last_name }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label>Reservation
+              <select name="reservation_id">
+                <option value="">None</option>
+                {% for reservation in reservations %}
+                <option value="{{ reservation.reservation_id }}" {% if edit_order and edit_order.reservation_id == reservation.reservation_id %}selected{% endif %}>{{ reservation.reservation_id }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label>Status
+              <select name="order_status">
+                <option value="received" {% if edit_order and edit_order.order_status == 'received' %}selected{% endif %}>Received</option>
+                <option value="preparing" {% if edit_order and edit_order.order_status == 'preparing' %}selected{% endif %}>Preparing</option>
+                <option value="served" {% if edit_order and edit_order.order_status == 'served' %}selected{% endif %}>Served</option>
+                <option value="completed" {% if edit_order and edit_order.order_status == 'completed' %}selected{% endif %}>Completed</option>
+                <option value="cancelled" {% if edit_order and edit_order.order_status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+              </select>
+            </label>
+            <label>Total Amount
+              <input type="number" step="0.01" name="total_amount" value="{{ edit_order.total_amount if edit_order else 0 }}" required />
+            </label>
+            <label>Order Time
+              <input type="datetime-local" name="order_datetime" value="{{ edit_order.order_datetime if edit_order else '' }}" />
+            </label>
+            <button type="submit">{{ 'Update Order' if edit_order else 'Add Order' }}</button>
+          </form>
+          <table>
+            <thead>
+              <tr><th>Customer</th><th>Status</th><th>Total</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              {% for order in orders %}
+              <tr>
+                <td>{{ order.customer_name }}</td>
+                <td>{{ order.order_status }}</td>
+                <td>${{ '%.2f'|format(order.total_amount) }}</td>
+                <td>
+                  <a href="{{ url_for('index', edit_order_id=order.order_id) }}">Edit</a>
+                  <form method="post" action="{{ url_for('delete_order', order_id=order.order_id) }}" style="display:inline;">
+                    <button class="danger" type="submit">Delete</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>
