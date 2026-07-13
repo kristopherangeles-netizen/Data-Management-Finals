@@ -104,15 +104,16 @@ def main(page: ft.Page):
     page.horizontal_alignment = ft.CrossAxisAlignment.STRETCH
     page.padding = 10
     page.scroll = ft.ScrollMode.AUTO
-    page.window_width = 430
-    page.window_height = 960
-    page.window_resizable = True
+    page.window.width = 430
+    page.window.height = 960
+    page.window.resizable = True
 
     state = {
         "editing_customer_id": None,
         "editing_reservation_id": None,
         "editing_menu_id": None,
         "editing_order_id": None,
+        "active_tab": 0,
     }
 
     def load_data():
@@ -463,102 +464,109 @@ def main(page: ft.Page):
             page.add(build_page())
             page.update()
 
+        def switch_tab(index):
+            state["active_tab"] = index
+            refresh_page()
+
+        customer_view = ft.Container(
+            padding=5,
+            content=ft.Column(
+                [
+                    ft.Text("Customer details", size=18, weight="bold"),
+                    ft.ResponsiveRow([ft.Container(customer_first_name, expand=True, padding=2), ft.Container(customer_last_name, expand=True, padding=2)]),
+                    ft.ResponsiveRow([ft.Container(customer_email, expand=True, padding=2), ft.Container(customer_phone, expand=True, padding=2)]),
+                    ft.Container(customer_points, padding=2),
+                    ft.Row(
+                        [
+                            ft.ElevatedButton("Save", on_click=save_customer),
+                            ft.OutlinedButton("Cancel", on_click=cancel_customer),
+                        ],
+                        spacing=8,
+                    ),
+                    ft.Divider(),
+                    ft.Text("Customer list", size=16, weight="bold"),
+                    ft.Column(customer_cards, spacing=8),
+                ],
+                spacing=8,
+            ),
+        )
+
+        reservation_view = ft.Container(
+            padding=5,
+            content=ft.Column(
+                [
+                    ft.Text("Create or update a reservation", size=18, weight="bold"),
+                    ft.Container(reservation_customer, padding=2),
+                    ft.ResponsiveRow([ft.Container(reservation_date, expand=True, padding=2), ft.Container(reservation_time, expand=True, padding=2)]),
+                    ft.ResponsiveRow([ft.Container(reservation_size, expand=True, padding=2), ft.Container(reservation_status, expand=True, padding=2)]),
+                    ft.Container(reservation_notes, padding=2),
+                    ft.Row([ft.ElevatedButton("Save", on_click=save_reservation), ft.OutlinedButton("Cancel", on_click=cancel_reservation)], spacing=8),
+                    ft.Divider(),
+                    ft.Text("Reservation list", size=16, weight="bold"),
+                    ft.Column(reservation_cards, spacing=8),
+                ],
+                spacing=8,
+            ),
+        )
+
+        menu_view = ft.Container(
+            padding=5,
+            content=ft.Column(
+                [
+                    ft.Text("Menu item management", size=18, weight="bold"),
+                    ft.Container(menu_name, padding=2),
+                    ft.ResponsiveRow([ft.Container(menu_category, expand=True, padding=2), ft.Container(menu_price, expand=True, padding=2)]),
+                    ft.Container(menu_description, padding=2),
+                    ft.Container(menu_available, padding=2),
+                    ft.Row([ft.ElevatedButton("Save", on_click=save_menu), ft.OutlinedButton("Cancel", on_click=cancel_menu)], spacing=8),
+                    ft.Divider(),
+                    ft.Text("Menu items", size=16, weight="bold"),
+                    ft.Column(menu_cards, spacing=8),
+                ],
+                spacing=8,
+            ),
+        )
+
+        order_view = ft.Container(
+            padding=5,
+            content=ft.Column(
+                [
+                    ft.Text("Order management", size=18, weight="bold"),
+                    ft.Container(order_customer, padding=2),
+                    ft.Container(order_reservation, padding=2),
+                    ft.ResponsiveRow([ft.Container(order_status, expand=True, padding=2), ft.Container(order_total, expand=True, padding=2)]),
+                    ft.Container(order_time, padding=2),
+                    ft.Row([ft.ElevatedButton("Save", on_click=save_order), ft.OutlinedButton("Cancel", on_click=cancel_order)], spacing=8),
+                    ft.Divider(),
+                    ft.Text("Recent orders", size=16, weight="bold"),
+                    ft.Column(order_cards, spacing=8),
+                ],
+                spacing=8,
+            ),
+        )
+
+        tab_views = [customer_view, reservation_view, menu_view, order_view]
+        active_view = tab_views[state["active_tab"]]
+
         content = ft.Container(
             content=ft.Column(
                 [
                     ft.Text("Restaurant Manager", size=24, weight="bold"),
-                    ft.Text("Mobile-friendly dashboard for customers, reservations, menu items, and orders.", color=ft.colors.BLUE_GREY_700),
+                    ft.Text("Mobile-friendly dashboard for customers, reservations, menu items, and orders.", color="bluegrey700"),
                     ft.Divider(),
-                    ft.Tabs(
-                        selected_index=0,
-                        animation_duration=300,
-                        tabs=[
-                            ft.Tab(
-                                text="Customers",
-                                content=ft.Container(
-                                    padding=5,
-                                    content=ft.Column(
-                                        [
-                                            ft.Text("Customer details", size=18, weight="bold"),
-                                            ft.ResponsiveRow([ft.Container(customer_first_name, expand=True, padding=2), ft.Container(customer_last_name, expand=True, padding=2)]),
-                                            ft.ResponsiveRow([ft.Container(customer_email, expand=True, padding=2), ft.Container(customer_phone, expand=True, padding=2)]),
-                                            ft.Container(customer_points, padding=2),
-                                            ft.Row(
-                                                [
-                                                    ft.ElevatedButton("Save", on_click=save_customer),
-                                                    ft.OutlinedButton("Cancel", on_click=cancel_customer),
-                                                ],
-                                                spacing=8,
-                                            ),
-                                            ft.Divider(),
-                                            ft.Text("Customer list", size=16, weight="bold"),
-                                            ft.Column(customer_cards, spacing=8),
-                                        ],
-                                        spacing=8,
-                                    ),
-                                ),
-                            ),
-                            ft.Tab(
-                                text="Reservations",
-                                content=ft.Container(
-                                    padding=5,
-                                    content=ft.Column(
-                                        [
-                                            ft.Text("Create or update a reservation", size=18, weight="bold"),
-                                            ft.Container(reservation_customer, padding=2),
-                                            ft.ResponsiveRow([ft.Container(reservation_date, expand=True, padding=2), ft.Container(reservation_time, expand=True, padding=2)]),
-                                            ft.ResponsiveRow([ft.Container(reservation_size, expand=True, padding=2), ft.Container(reservation_status, expand=True, padding=2)]),
-                                            ft.Container(reservation_notes, padding=2),
-                                            ft.Row([ft.ElevatedButton("Save", on_click=save_reservation), ft.OutlinedButton("Cancel", on_click=cancel_reservation)], spacing=8),
-                                            ft.Divider(),
-                                            ft.Text("Reservation list", size=16, weight="bold"),
-                                            ft.Column(reservation_cards, spacing=8),
-                                        ],
-                                        spacing=8,
-                                    ),
-                                ),
-                            ),
-                            ft.Tab(
-                                text="Menu",
-                                content=ft.Container(
-                                    padding=5,
-                                    content=ft.Column(
-                                        [
-                                            ft.Text("Menu item management", size=18, weight="bold"),
-                                            ft.Container(menu_name, padding=2),
-                                            ft.ResponsiveRow([ft.Container(menu_category, expand=True, padding=2), ft.Container(menu_price, expand=True, padding=2)]),
-                                            ft.Container(menu_description, padding=2),
-                                            ft.Container(menu_available, padding=2),
-                                            ft.Row([ft.ElevatedButton("Save", on_click=save_menu), ft.OutlinedButton("Cancel", on_click=cancel_menu)], spacing=8),
-                                            ft.Divider(),
-                                            ft.Text("Menu items", size=16, weight="bold"),
-                                            ft.Column(menu_cards, spacing=8),
-                                        ],
-                                        spacing=8,
-                                    ),
-                                ),
-                            ),
-                            ft.Tab(
-                                text="Orders",
-                                content=ft.Container(
-                                    padding=5,
-                                    content=ft.Column(
-                                        [
-                                            ft.Text("Order management", size=18, weight="bold"),
-                                            ft.Container(order_customer, padding=2),
-                                            ft.Container(order_reservation, padding=2),
-                                            ft.ResponsiveRow([ft.Container(order_status, expand=True, padding=2), ft.Container(order_total, expand=True, padding=2)]),
-                                            ft.Container(order_time, padding=2),
-                                            ft.Row([ft.ElevatedButton("Save", on_click=save_order), ft.OutlinedButton("Cancel", on_click=cancel_order)], spacing=8),
-                                            ft.Divider(),
-                                            ft.Text("Recent orders", size=16, weight="bold"),
-                                            ft.Column(order_cards, spacing=8),
-                                        ],
-                                        spacing=8,
-                                    ),
-                                ),
-                            ),
-                        ],
+                    ft.Container(
+                        content=ft.Column([
+                            ft.Text("Choose a section", size=14, weight="bold"),
+                            ft.Row([
+                                ft.TextButton("Customers", on_click=lambda e: switch_tab(0)),
+                                ft.TextButton("Reservations", on_click=lambda e: switch_tab(1)),
+                                ft.TextButton("Menu", on_click=lambda e: switch_tab(2)),
+                                ft.TextButton("Orders", on_click=lambda e: switch_tab(3)),
+                            ], wrap=True),
+                            ft.Divider(),
+                            active_view,
+                        ], spacing=8),
+                        padding=2,
                     ),
                 ],
                 spacing=10,
