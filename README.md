@@ -1,4 +1,4 @@
-run main.py for the Restaurant Management System
+<b> run main.py for the Restaurant Management System </b>
 
 The data shown below are only dummy data, any data added will be applied and also added inside the SQL queries per Device.
 
